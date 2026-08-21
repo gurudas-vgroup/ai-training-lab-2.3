@@ -1,14 +1,7 @@
 import "dotenv/config";
 import * as readline from "node:readline/promises";
 import { z } from "zod";
-import {
-  createSdkMcpServer,
-  tool,
-  query,
-  type PermissionMode,
-  type PermissionResult,
-  type CanUseTool,
-} from "@anthropic-ai/claude-agent-sdk";
+import { createSdkMcpServer, tool, query } from "@anthropic-ai/claude-agent-sdk";
 
 if (!process.env["ANTHROPIC_API_KEY"]) {
   throw new Error("ANTHROPIC_API_KEY is not set. Add it to your .env file.");
@@ -16,11 +9,11 @@ if (!process.env["ANTHROPIC_API_KEY"]) {
 
 // Deterministic mock stock levels, keyed by SKU. Unknown SKUs fall back to a
 // stable pseudo-random count derived from the SKU string so repeat calls agree.
-const MOCK_STOCK: Readonly<Record<string, number>> = {
+const MOCK_STOCK = {
   "WB-1L": 42,
 };
 
-function getMockStockCount(sku: string): number {
+function getMockStockCount(sku) {
   const known = MOCK_STOCK[sku];
   if (known !== undefined) {
     return known;
@@ -56,7 +49,7 @@ const rl = readline.createInterface({ input: process.stdin, output: process.stdo
 
 // Ask a human at the terminal to approve/deny every tool call before it runs,
 // rather than letting the SDK auto-decide or silently deny it.
-const requireHumanApproval: CanUseTool = async (toolName, input, opts): Promise<PermissionResult> => {
+const requireHumanApproval = async (toolName, input, opts) => {
   console.log(`\n[permission request] Tool "${toolName}" wants to run with input:`);
   console.log(JSON.stringify(input, null, 2));
   const answer = await rl.question(`Allow "${toolName}"? (y/n) `);
@@ -69,9 +62,9 @@ const requireHumanApproval: CanUseTool = async (toolName, input, opts): Promise<
 // "default" mode prompts for every tool call instead of auto-approving or
 // auto-denying it; paired with canUseTool below, that prompt is a real
 // terminal approval step rather than an implicit decision.
-const permissionMode: PermissionMode = "default";
+const permissionMode = "default";
 
-async function main(): Promise<void> {
+async function main() {
   const prompt = "How many of SKU WB-1L do we have in stock?";
 
   const stream = query({
@@ -119,7 +112,7 @@ async function main(): Promise<void> {
   rl.close();
 }
 
-main().catch((error: unknown) => {
+main().catch((error) => {
   rl.close();
   console.error(error);
   process.exitCode = 1;
